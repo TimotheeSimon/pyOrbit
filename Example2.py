@@ -1,0 +1,36 @@
+import numpy as np
+from math import sqrt
+import matplotlib.pyplot as plt
+from scipy.integrate import ode
+from mpl_toolkits.mplot3d import Axes3D
+
+
+from sys import path
+path.append('C:\\Users\\timsi\\Documents\\Visual Studio Code\\Orbit Visualisation\\pyOrbit')
+from OrbitPropagator import OrbitPropagator as OP
+import planetary_data as pd
+import tools as t
+
+dt = 60
+tspan = 24*60*dt
+
+if __name__ == '__main__':
+	
+	r_mag = pd.earth['radius']+35000
+	v_mag= sqrt(pd.earth['mu']/r_mag)
+	r0 = np.array([r_mag, 0, 0])
+	v0 = np.array([0, -v_mag*0.7, v_mag*0.2])
+
+	r_mag = pd.earth['radius']+8000
+	v_mag= sqrt(pd.earth['mu']/r_mag)*1.1
+	r00 = np.array([r_mag, r_mag/2, 0])
+	v00 = np.array([v_mag*0.4, -v_mag*0.8, -v_mag*0.2])
+
+	op0 = OP(r0, v0, tspan, dt)
+	op00 = OP(r00, v00, tspan, dt)
+
+	op0.propagate_orbit()
+	op00.propagate_orbit()
+
+	t.plot_n_orbits([op0.rs, op00.rs], labels=['0','1'], show_plot=True)
+	
