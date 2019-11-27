@@ -6,7 +6,8 @@ earth={
     'name':'Earth',
     'mass':5.97e24,
     'mu':5.9736e24*G,
-    'radius':6378.137
+    'radius':6378.137,
+    'J2':1.082635854e-3
 }
 
 sun={

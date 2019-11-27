@@ -3,11 +3,13 @@ import math as ma
 import datetime
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from numpy.linalg import norm
 
 
 import planetary_data as pd
 
 d2r = np.pi/180
+r2d = 180/np.pi
 
 def plot_3d(rs, cb=pd.earth, title='Figure', show_plot=False, save_plot=False):
 		fig =  plt.figure(figsize=(10,8))
@@ -18,7 +20,7 @@ def plot_3d(rs, cb=pd.earth, title='Figure', show_plot=False, save_plot=False):
 		ax.plot([rs[0,0]], [rs[0,1]], [rs[0,2]], 'o', color='xkcd:crimson')
 
 
-		_u, _v = np.mgrid[0:2*np.pi:30j, 0:np.pi:20j]
+		_u, _v = np.mgrid[0:2*np.pi:25j, 0:np.pi:15j]
 		_x = cb['radius']*np.cos(_u)*np.sin(_v)
 		_y = cb['radius']*np.sin(_u)*np.sin(_v)
 		_z = cb['radius']*np.cos(_v)
@@ -108,6 +110,42 @@ def coes2rv(coes, mu=pd.earth['mu'], deg=True):
     v = np.dot(perif2eci, v_perif)
 
     return r, v, date
+
+def rv2coes(r, v, mu=pd.earth['mu'], deg=False, print_results=False):
+    r_norm = norm(r)
+    
+    h = np.cross(r,v)
+    h_norm = norm(h)
+
+    i = ma.acos(h[2]/h_norm)
+
+    e = ((norm(v)**2-mu/r_norm)*r-np.dot(r,v)*v)/mu
+    e_norm = norm(e)
+
+    N = np.cross([0,0,1],h)
+    N_norm = norm(N)
+
+    raan = ma.acos(N[0]/N_norm)
+    if N[1]<0: raan = 2*np.pi-raan
+
+    aop = ma.acos(np.dot(N,e)/N_norm/e_norm)
+    if e[2]<0: aop = 2*np.pi-aop
+    
+    ta = ma.acos(np.dot(e,r)/e_norm/r_norm)
+    if np.dot(r,v)<0: ta = 2*np.pi-ta
+
+    a = r_norm*(1+e_norm*ma.cos(ta))/(1-e_norm**2)
+
+    if print_results:
+        print('a : '+a)
+        print('e : '+e_norm)
+        print('i : '+i*r2d)
+        print('raan : '+raan*r2d)
+        print('aop : '+aop*r2d)
+        print('ta : '+ta*r2d)
+    
+    if deg: return [a, e_norm, i*r2d, ta*r2d, aop*r2d, raan*r2d]
+    else: [a, e_norm, i, ta, aop, raan]
 
 def ecc_anomay(arr, method, tol=1e-8, max_step=200):
     if method=='newton':
