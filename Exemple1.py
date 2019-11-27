@@ -21,6 +21,5 @@ if __name__ == '__main__':
 	tspan = 24*60*dt
 
 	op = OP(r0, v0, tspan, dt)
-	op.propagate_orbit()
 	op.plot_3d(show_plot=True)
 	

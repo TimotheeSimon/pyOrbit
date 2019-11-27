@@ -8,9 +8,9 @@ import tools as t
 
 class OrbitPropagator:
 
-	def __init__(self, state0, tspan, dt, coes=False,cb=pd.earth):
+	def __init__(self, state0, tspan, dt, coes=False,cb=pd.earth, deg=True):
 		if coes:
-			self.r0, self.v0 = t.coes2rv(state0, mu=cb['mu'])
+			self.r0, self.v0, self.date = t.coes2rv(state0, mu=cb['mu'], deg=deg)
 		else:
 			self.r0 = state0[:3]
 			self.v0 = state0[3:]
@@ -31,6 +31,8 @@ class OrbitPropagator:
 		self.solver = ode(self.diffy_q)
 		self.solver.set_integrator('lsoda')
 		self.solver.set_initial_value(self.y0)
+
+		self.propagate_orbit()
 	
 	def propagate_orbit(self):
 
@@ -52,42 +54,7 @@ class OrbitPropagator:
 
 		return[vx,vy,vz,ax,ay,az]
 
-	def plot_3d(self, title='Figure', show_plot=False, save_plot=False):
-		fig =  plt.figure(figsize=(10,8))
-		ax = fig.add_subplot(111, projection='3d')
-		#ax.set_aspect("equal")
-		
-		ax.plot(self.rs[:,0], self.rs[:,1], self.rs[:,2], color='xkcd:crimson', label="Trajectory")
-		ax.plot([self.rs[0,0]], [self.rs[0,1]], [self.rs[0,2]], 'o', color='xkcd:crimson')
-
-
-		_u, _v = np.mgrid[0:2*np.pi:30j, 0:np.pi:20j]
-		_x = self.cb['radius']*np.cos(_u)*np.sin(_v)
-		_y = self.cb['radius']*np.sin(_u)*np.sin(_v)
-		_z = self.cb['radius']*np.cos(_v)
-		ax.plot_surface(_x, _y, _z, cmap='Blues')
-
-		l=self.cb['radius']*1.5
-		x,y,z=[[0,0,0], [0,0,0], [0,0,0]]
-		u,v,w=[[l,0,0], [0,l,0], [0,0,l]]
-
-		ax.quiver(x,y,z,u,v,w, color='k', arrow_length_ratio=0.1)
-
-		max_val=np.max(np.abs(self.rs))
-		ax.set_xlim(-max_val, max_val)
-		ax.set_ylim(-max_val, max_val)
-		ax.set_zlim(-max_val, max_val)
-
-		ax.set_xlabel('X (km)')
-		ax.set_ylabel('Y (km)')
-		ax.set_zlabel('Z (km)')
-
-		plt.legend()
-		plt.title(title)
-		if show_plot:
-			plt.show()
-		if save_plot:
-			plt.savefig(title+'.png', dpi=300)
+	
 
 	
 

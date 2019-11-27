@@ -25,10 +25,6 @@ if __name__ == '__main__':
 	op1 = OP(c1,tspan,dt,coes=True)
 	op2 = OP(c2,tspan,dt,coes=True)
 
-	op0.propagate_orbit()
-	op1.propagate_orbit()
-	op2.propagate_orbit()
-
 	t.plot_n_orbits([op0.rs, op1.rs, op2.rs], labels=['OneWeb', 'Iss', 'GEO'], show_plot=True)
 
 
