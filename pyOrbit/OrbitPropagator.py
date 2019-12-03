@@ -18,7 +18,8 @@ class OrbitPropagator:
 
 	def __init__(self, state0, tspan, dt, coes=False,cb=pd.earth, deg=True, perts=null_perts()):
 		if coes:
-			self.r0, self.v0, self.date = t.coes2rv(state0, mu=cb['mu'], deg=deg)
+			self.r0, self.v0 = t.coes2rv(state0, mu=cb['mu'], deg=deg)
+			
 		else:
 			self.r0 = state0[:3]
 			self.v0 = state0[3:]
@@ -55,28 +56,35 @@ class OrbitPropagator:
 		self.rs = self.ys[:,:3]
 		self.vs = self.ys[:,3:]
 
-	def diffy_q(self, t, y):
+	def diffy_q(self, time, y):
 		rx,ry,rz,vx,vy,vz = y
+		
 		r = np.array([rx,ry,rz])
 		v = np.array([vx,vy,vz])
 		norm_r = np.linalg.norm(r)
+		norm_v = np.linalg.norm(v)
 
 		# Two bodies acceleration
 		a = -r*self.cb['mu']/norm_r**3
 
 		# J2 Perturbation
 		if self.perts['J2']:
-			z2 = r[2]**2
-			r2 = norm_r**2
-			tx = r[0]/norm_r*(5*z2/r2-1)
-			ty = r[1]/norm_r*(5*z2/r2-1)
-			tz = r[2]/norm_r*(5*z2/r2-3)
+			h = np.cross(r,v)
+			norm_h = np.linalg.norm(h)
+			demi_axes, e_norm, i, ta, aop, raan = t.rv2coes(r, v, mu=self.cb['mu'])
+			
+			A = - 1.5 * self.cb['J2'] * self.cb['mu'] * self.cb['radius']**2/norm_r**4
+		
+			pr = (1 - 3*np.sin(i)**2*np.sin(aop+ta)**2) * A * r/norm_r
+			pv = np.sin(i)**2*np.sin(2*(aop+ta)) * A * v/norm_v
+			ph = np.sin(2*i)*np.sin(aop+ta) * A * h/norm_h
 
-			a_j2 = 1.5 * self.cb['J2'] * self.cb['mu'] * self.cb['radius']**2/norm_r**4*np.array([tx,ty,tz])
-			a+=a_j2
+			a_j2 = pr + pv + ph
+		
+			a += a_j2
 
 
-		return[vx,vy,vz,a[0],a[1],a[2]]
+		return [vx,vy,vz,a[0],a[1],a[2]]
 
 	def calculate_coes(self, deg=True):
 		print('Calcutating classical orbital elements ..')

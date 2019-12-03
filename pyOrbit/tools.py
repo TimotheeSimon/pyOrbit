@@ -11,7 +11,7 @@ import planetary_data as pd
 d2r = np.pi/180
 r2d = 180/np.pi
 
-def plot_3d(rs, cb=pd.earth, title='Figure', show_plot=False, save_plot=False):
+def plot_3d(rs, cb=pd.earth, title='Figure', show_plot=True, save_plot=False):
 		fig =  plt.figure(figsize=(10,8))
 		ax = fig.add_subplot(111, projection='3d')
 		#ax.set_aspect("equal")
@@ -89,7 +89,7 @@ def plot_n_orbits(rs, labels, cb=pd.earth, title='Figure', show_plot=False, save
         plt.savefig(title+'.png', dpi=300)
 
 def coes2rv(coes, mu=pd.earth['mu'], deg=True):
-    a,e,i,ta,aop,raan, date = coes
+    a,e,i,ta,aop,raan = coes
     if deg:
         i*=d2r
         ta*=d2r
@@ -109,7 +109,7 @@ def coes2rv(coes, mu=pd.earth['mu'], deg=True):
     r = np.dot(perif2eci, r_perif)
     v = np.dot(perif2eci, v_perif)
 
-    return r, v, date
+    return r, v
 
 def rv2coes(r, v, mu=pd.earth['mu'], deg=False, print_results=False):
     r_norm = norm(r)
@@ -127,8 +127,10 @@ def rv2coes(r, v, mu=pd.earth['mu'], deg=False, print_results=False):
 
     raan = ma.acos(N[0]/N_norm)
     if N[1]<0: raan = 2*np.pi-raan
-
-    aop = ma.acos(np.dot(N,e)/N_norm/e_norm)
+    if (np.dot(N,e)/N_norm/e_norm)>1:
+        aop= ma.acos(1)
+    else:
+        aop = ma.acos(np.dot(N,e)/N_norm/e_norm)
     if e[2]<0: aop = 2*np.pi-aop
     
     ta = ma.acos(np.dot(e,r)/e_norm/r_norm)
@@ -137,15 +139,15 @@ def rv2coes(r, v, mu=pd.earth['mu'], deg=False, print_results=False):
     a = r_norm*(1+e_norm*ma.cos(ta))/(1-e_norm**2)
 
     if print_results:
-        print('a : '+a)
-        print('e : '+e_norm)
-        print('i : '+i*r2d)
-        print('raan : '+raan*r2d)
-        print('aop : '+aop*r2d)
-        print('ta : '+ta*r2d)
+        print('a : '+str(a))
+        print('e : '+str(e_norm))
+        print('i : '+str(i*r2d))
+        print('raan : '+str(raan*r2d))
+        print('aop : '+str(aop*r2d))
+        print('ta : '+str(ta*r2d))
     
     if deg: return [a, e_norm, i*r2d, ta*r2d, aop*r2d, raan*r2d]
-    else: [a, e_norm, i, ta, aop, raan]
+    else: return [a, e_norm, i, ta, aop, raan]
 
 def ecc_anomay(arr, method, tol=1e-8, max_step=200):
     if method=='newton':
