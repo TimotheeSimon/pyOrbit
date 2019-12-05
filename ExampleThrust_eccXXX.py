@@ -14,14 +14,25 @@ import planetary_data as pd
 import tools as t
 
 
-tspan = 3600*24*20.0
-dt = 10
+
+dt = 1
+tspan = dt*3600*24
 cb = pd.earth
 
 if __name__ == '__main__':
     perts = null_perts()
-    perts['J2']=True
-    op = OP(t.tle2coes('Orbit Visualisation\\AISSAT2.txt'), tspan, dt, coes=True, deg=False, perts=perts)
-    t.plot_3d(op.rs, show_plot=True)
 
-	
+    perts['a_maneuvre']=False
+    perts['ecc_maneuvre']=True
+    perts['thrust']=20.089
+    perts['isp']=1650
+    
+    mass0 = 367
+
+    coes = np.array([cb['radius']+1000, 0.01, 30, 0.0, 0.0, 0.0, [0,0,0]])
+    op = OP(coes, tspan, dt, mass0, coes=True, deg=True, perts=perts)
+
+    op.calculate_coes()
+    op.plot_coes(hours=True)
+    op.plot_3d()
+    #op.plot_masses(hours=True)

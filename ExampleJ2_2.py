@@ -25,7 +25,7 @@ if __name__ == '__main__':
     op = OP(rv, tspan, dt, coes=False, deg=False, perts=perts)
 
     # coes = np.array([cb['radius']+600, 0.1, 90.01, 0.0, 0.0, 0.0])
-    #op = OP(coes, tspan, dt, coes=True, deg=True, perts=perts)
+    # op = OP(coes, tspan, dt, coes=True, deg=True, perts=perts)
 
     op.calculate_coes()
 
@@ -35,4 +35,3 @@ if __name__ == '__main__':
     print(op.coes[-1,4]) 
 
     op.plot_coes(hours=True, show_plot=True)
-    t.plot_3d(op.ys)

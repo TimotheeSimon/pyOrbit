@@ -11,48 +11,15 @@ import planetary_data as pd
 d2r = np.pi/180
 r2d = 180/np.pi
 
-def plot_3d(rs, cb=pd.earth, title='Figure', show_plot=True, save_plot=False):
-		fig =  plt.figure(figsize=(10,8))
-		ax = fig.add_subplot(111, projection='3d')
-		#ax.set_aspect("equal")
-		
-		ax.plot(rs[:,0], rs[:,1], rs[:,2], color='xkcd:crimson', label="Trajectory")
-		ax.plot([rs[0,0]], [rs[0,1]], [rs[0,2]], 'o', color='xkcd:crimson')
-
-
-		_u, _v = np.mgrid[0:2*np.pi:25j, 0:np.pi:15j]
-		_x = cb['radius']*np.cos(_u)*np.sin(_v)
-		_y = cb['radius']*np.sin(_u)*np.sin(_v)
-		_z = cb['radius']*np.cos(_v)
-		ax.plot_surface(_x, _y, _z, cmap='Blues')
-
-		l=cb['radius']*1.5
-		x,y,z=[[0,0,0], [0,0,0], [0,0,0]]
-		u,v,w=[[l,0,0], [0,l,0], [0,0,l]]
-
-		ax.quiver(x,y,z,u,v,w, color='k', arrow_length_ratio=0.1)
-
-		max_val=np.max(np.abs(rs))
-		ax.set_xlim(-max_val, max_val)
-		ax.set_ylim(-max_val, max_val)
-		ax.set_zlim(-max_val, max_val)
-
-		ax.set_xlabel('X (km)')
-		ax.set_ylabel('Y (km)')
-		ax.set_zlabel('Z (km)')
-
-		plt.legend()
-		plt.title(title)
-		if show_plot:
-			plt.show()
-		if save_plot:
-			plt.savefig(title+'.png', dpi=300)
-
-def plot_n_orbits(rs, labels, cb=pd.earth, title='Figure', show_plot=False, save_plot=False):
+def plot_n_orbits(rs,
+                  labels,
+                  cb=pd.earth,
+                  title='Figure',
+                  show_plot=False,
+                  save_plot=False,
+                  return_ax=False):
     fig =  plt.figure(figsize=(10,8))
     ax = fig.add_subplot(111, projection='3d')
-    
-    
     n=0
     for r in rs:
         ax.plot(r[:,0], r[:,1], r[:,2], label=labels[n])
@@ -87,9 +54,11 @@ def plot_n_orbits(rs, labels, cb=pd.earth, title='Figure', show_plot=False, save
         plt.show()
     if save_plot:
         plt.savefig(title+'.png', dpi=300)
+    if return_ax:
+        return ax
 
 def coes2rv(coes, mu=pd.earth['mu'], deg=True):
-    a,e,i,ta,aop,raan = coes
+    a,e,i,ta,aop,raan, date = coes
     if deg:
         i*=d2r
         ta*=d2r
@@ -109,14 +78,14 @@ def coes2rv(coes, mu=pd.earth['mu'], deg=True):
     r = np.dot(perif2eci, r_perif)
     v = np.dot(perif2eci, v_perif)
 
-    return r, v
+    return r, v, date
 
 def rv2coes(r, v, mu=pd.earth['mu'], deg=False, print_results=False):
     r_norm = norm(r)
     
     h = np.cross(r,v)
     h_norm = norm(h)
-
+    
     i = ma.acos(h[2]/h_norm)
 
     e = ((norm(v)**2-mu/r_norm)*r-np.dot(r,v)*v)/mu
@@ -124,16 +93,28 @@ def rv2coes(r, v, mu=pd.earth['mu'], deg=False, print_results=False):
 
     N = np.cross([0,0,1],h)
     N_norm = norm(N)
+    
+    if N[0]/N_norm<-1:
+        raan = ma.acos(-1)
+    else:
+        raan = ma.acos(N[0]/N_norm)
 
-    raan = ma.acos(N[0]/N_norm)
+
+
+    
     if N[1]<0: raan = 2*np.pi-raan
+    
     if (np.dot(N,e)/N_norm/e_norm)>1:
-        aop= ma.acos(1)
+        aop = ma.acos(1)
     else:
         aop = ma.acos(np.dot(N,e)/N_norm/e_norm)
+    
     if e[2]<0: aop = 2*np.pi-aop
     
-    ta = ma.acos(np.dot(e,r)/e_norm/r_norm)
+    if np.dot(e,r)/e_norm/r_norm > 1:
+        ta = ma.acos(1)
+    else:
+        ta = ma.acos(np.dot(e,r)/e_norm/r_norm)
     if np.dot(r,v)<0: ta = 2*np.pi-ta
 
     a = r_norm*(1+e_norm*ma.cos(ta))/(1-e_norm**2)
