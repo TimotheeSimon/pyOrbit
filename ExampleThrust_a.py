@@ -15,8 +15,8 @@ import tools as t
 
 
 
-dt = 60
-tspan = dt*60*24
+dt = 1
+tspan = dt*60*24*36
 cb = pd.earth
 
 if __name__ == '__main__':
@@ -32,5 +32,6 @@ if __name__ == '__main__':
 
     op.calculate_coes()
     op.plot_coes(hours=True)
-    op.plot_3d()
-    op.plot_masses(hours=True)
+    #op.plot_3d()
+    op.plot_3d_animation()
+    #op.plot_masses(hours=True)

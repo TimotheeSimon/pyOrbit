@@ -34,5 +34,5 @@ if __name__ == '__main__':
 
     op.calculate_coes()
     op.plot_coes(hours=True)
-    op.plot_3d()
+    op.plot_3d_animation()
     #op.plot_masses(hours=True)

@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.integrate import ode
 from mpl_toolkits.mplot3d import Axes3D
 import math as ma
+import vpython as v
 
 import planetary_data as pd
 import tools as t
@@ -263,6 +264,22 @@ class OrbitPropagator:
             
         if return_ax:
             return ax
+
+    def plot_3d_animation(self):
+        scene = v.canvas(width=1500, height=700, center=v.vector(0,5,0), background=v.color.white)
+        scene.lights = []
+        scene.ambient = v.color.gray(0.8)
+        v.sphere(pos=v.vector(0,0,0), radius=self.cb['radius'], texture=v.textures.earth)
+        r0 = self.rs[0]
+        spacecraft = v.sphere(pos=v.vector(r0[0],r0[1],r0[2]), radius=250, color=v.vector(0, 21/25, 0), trail_color=v.vector(21/25, 0, 0), make_trail=True, trail_radius=20)
+
+        for r in self.rs:
+            v.rate(1000)
+            spacecraft.pos = v.vector(r[0],r[1],r[2])
+
+
+
+
 
     def plot_masses(self, hours=False,
                     title='Masses',
