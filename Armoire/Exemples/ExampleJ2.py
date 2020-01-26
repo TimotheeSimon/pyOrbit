@@ -8,14 +8,15 @@ import os
 
 
 from sys import path
-path.append('C:\\Users\\timsi\\Documents\\Visual Studio Code\\Orbit Visualisation\\pyOrbit')
+path.append('D:\\Users\\s606482\\Desktop\\pyOrbit-master\\pyOrbit')
 from OrbitPropagator import OrbitPropagator as OP
 from OrbitPropagator import null_perts
 import planetary_data as pd
 import tools as t
 
-tspan = 3600*24
-dt = 10
+
+dt = 1
+tspan = dt*3600*24*30
 cb = pd.earth
 
 if __name__ == '__main__':

@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 from sys import path
-path.append('C:\\Users\\timsi\\Documents\\Visual Studio Code\\Orbit Visualisation\\pyOrbit')
+path.append('D:\\Users\\s606482\\Desktop\\pyOrbit-dev\\pyOrbit')
 from OrbitPropagator import OrbitPropagator as OP
 import planetary_data as pd
 import tools as t

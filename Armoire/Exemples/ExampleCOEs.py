@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 from sys import path
-path.append('C:\\Users\\timsi\\Documents\\Visual Studio Code\\Orbit Visualisation\\pyOrbit')
+path.append('.\\pyOrbit')
 from OrbitPropagator import OrbitPropagator as OP
 import planetary_data as pd
 import tools as t
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     # a,e,i,ta,aop,raan
     c0 = [cb['radius']+1202.0, 0.0001604, 87.9018, 0.0, 87.4182, 15.1921, [0,0,0]]
     c1 = [cb['radius']+414.0, 0.0006189, 51.6393, 0.0, 234.1955, 105.6372, [0,0,0]]
-    c2 = [cb['radius']+35000.0, 0.0006189, 51.6393, 0.0, 234.1955, 105.6372, [0,0,0]]
+    c2 = [cb['radius']+35000.0, 0.0006189, 0, 0.0, 234.1955, 105.6372, [0,0,0]]
 
     op0 = OP(c0,tspan,dt,coes=True)
     op1 = OP(c1,tspan,dt,coes=True)

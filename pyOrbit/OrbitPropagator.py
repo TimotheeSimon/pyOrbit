@@ -34,7 +34,7 @@ class OrbitPropagator:
                  deg=True,
                  cb=pd.earth,
                  perts=null_perts(),
-                 propagator='lsoda'):
+                 propagator='dop853'):
         
         if coes:
             self.r0, self.v0, self.date = t.coes2rv(state0, mu=cb['mu'], deg=deg)
