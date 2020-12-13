@@ -39,7 +39,7 @@ class OrbitPropagator:
     """
 
     def __init__(self, state0, tspan, dt,
-                 mass0=0,
+                 mass0=1000,
                  t0=0,
                  coes=False,
                  deg=True,
@@ -360,10 +360,6 @@ class OrbitPropagator:
         for r in self.rs:
             v.rate(1000)
             spacecraft.pos = v.vector(r[0],r[1],r[2])
-
-
-
-
 
     def plot_masses(self, hours=False,
                     days=False,

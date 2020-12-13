@@ -9,8 +9,6 @@ import planetary_data as pd
 d2r = np.pi/180
 r2d = 180/np.pi
 
-
-
 def coes2rv(coes, mu=pd.earth['mu'], deg=True):
 
     """Converti les elements kepleriens en vecteurs position et vitesse
@@ -34,13 +32,12 @@ def coes2rv(coes, mu=pd.earth['mu'], deg=True):
         aop*=d2r
         raan*=d2r
    
-    E = ecc_anomay([ta,e]) # Anomalie moyenne approximée par anomalie vraie -> discutable
-
+    E = ecc_anomay([ta,e],'tae')
+    
     r_norm = a*(1-e**2)/(1+e*np.cos(ta))
 
     # Périfocal
     r_perif = r_norm*np.array([ma.cos(ta),ma.sin(ta),0])
-
     v_perif = ma.sqrt(mu*a)/r_norm*np.array([-ma.sin(E),ma.cos(E)*ma.sqrt(1-e**2),0])
 
     perif2eci = np.transpose(eci2perif(raan,aop,i))
@@ -49,7 +46,6 @@ def coes2rv(coes, mu=pd.earth['mu'], deg=True):
     v = np.dot(perif2eci, v_perif)
 
     return r, v, date
-
 
 def rv2coes(R, V, mu=pd.earth['mu'], deg=False, print_results=False, tol=1e-7):
 
@@ -74,8 +70,7 @@ def rv2coes(R, V, mu=pd.earth['mu'], deg=False, print_results=False, tol=1e-7):
     
     H = np.cross(R,V)
     h = norm(H)
-    print(H)
-    print(h)
+    
     if(h!=0):
         i = ma.acos(H[2]/h)
     else:
@@ -83,8 +78,6 @@ def rv2coes(R, V, mu=pd.earth['mu'], deg=False, print_results=False, tol=1e-7):
     
     N = np.cross([0,0,1], H)
     n = norm(N)
-
-   
     
     if n != 0:
         raan = ma.acos(N[0]/n)
@@ -106,8 +99,9 @@ def rv2coes(R, V, mu=pd.earth['mu'], deg=False, print_results=False, tol=1e-7):
                 aop = np.dot(N,E)/abs(np.dot(N,E))
             if E[2]<0:
                 aop = 2*np.pi - aop
-            else:
-                aop = 0
+        else:
+            print('Verifier valeur AOP')
+            aop = ma.pi/2
     else:
         aop = 0
     
@@ -127,24 +121,33 @@ def rv2coes(R, V, mu=pd.earth['mu'], deg=False, print_results=False, tol=1e-7):
     
     a = h**2/mu/(1-e**2)
         
-    if print_results:
+    if print_results and deg:
         print('a : '+str(a))
-        print('e : '+str(e_norm))
+        print('e : '+str(e))
         print('i : '+str(i*r2d))
         print('raan : '+str(raan*r2d))
         print('aop : '+str(aop*r2d))
         print('ta : '+str(ta*r2d))
+
+    if print_results and not deg:
+        print('a : '+str(a))
+        print('e : '+str(e))
+        print('i : '+str(i))
+        print('raan : '+str(raan))
+        print('aop : '+str(aop))
+        print('ta : '+str(ta))
     
     if deg: return [a, e, i*r2d, ta*r2d, aop*r2d, raan*r2d]
     else: return [a, e, i, ta, aop, raan]
 
-def ecc_anomay(arr, tol=1e-8, max_step=200):
+def ecc_anomay(arr, method, tol=1e-8, max_step=200):
 
     """Resoud l'equation de Kepler pour renvoyer l'anomalie excentrique
     à noter: Hautement inspiré de l'algorithm 3.3 présenté dans "Ressources/Orbital_mechanics_for_engineering_students.pdf"
 
     inputs:
     arr -- vecteur contenant l'anomalie moyenne et l'eccentricité  - array 1x2 [rad, 1]
+    method -- string indiquant le nom de la méthode de calcul - 'newton' ou 'tae'
     tol -- tolérance de l'algorithme - float [1] (par défaut 1e-8)
     max_step -- nombre maximum d'itération de l'algorithme - float [1] (par défaut 200)
     
@@ -152,17 +155,23 @@ def ecc_anomay(arr, tol=1e-8, max_step=200):
     E0 -- Anomalie excentrique - float [1]
     """
 
-    Me,e=arr
-    if Me<np.pi/2.0: E0=Me+e/2
-    else: E0=Me-e
-    for n in range(max_step):
-        ratio=(E0-e*np.sin(E0)-Me)/(1-e*np.cos(E0))
-        if abs(ratio)<tol:
-            if n==0: return E0
-            else: return E1
+    if method=='newton':
+        Me,e=arr
+        if Me<np.pi/2.0: E0=Me+e/2
+        else: E0=Me-e
+        for n in range(max_step):
+            ratio=(E0-e*np.sin(E0)-Me)/(1-e*np.cos(E0))
+            if abs(ratio)<tol:
+                if n==0: return E0
+                else: return E1
             E1 = E0-ratio
             E0=E1
-    return False
+        return False
+    elif method=='tae':
+        ta,e=arr
+        return 2*ma.atan(ma.sqrt((1-e)/(1+e))*ma.tan(ta/2.0))
+    else:
+        print('Invalid method for eccentric anomaly')
 
 def true_anomaly(arr):
 
@@ -203,9 +212,7 @@ def eci2perif(raan,aop,i):
     M = np.array([row0, row1, row2])
     return M
     
-
-
-def tle2coes(tle_filename, mu=pd.earth['mu']):
+def tle2coes(tle_filename, mu=pd.earth['mu'], deg=False):
 
     """Extrait les elements kepleriens contenus dans un fichier TLE
 
@@ -237,12 +244,13 @@ def tle2coes(tle_filename, mu=pd.earth['mu']):
     T = 1/mean_motion*24*3600 # seconds
     a = (T**2*mu/4.0/np.pi**2)**(1/3.0)
 
-    E = ecc_anomay([Me,e])
+    E = ecc_anomay([Me,e], 'tae')
     ta = true_anomaly([E, e])
     r_mag = a*(e-np.cos(E))
 
 
-    return [a, e, i, ta, aop, raan, [year, month, day, hour]]
+    if deg: return a, e, i*r2d, ta*r2d, aop*r2d, raan*r2d, [year, month, day, hour]
+    else: return a, e, i, ta, aop, raan, [year, month, day, hour]
 
 def calc_epoch(epoch):
 
@@ -267,8 +275,6 @@ def calc_epoch(epoch):
     day = float(date.day)
 
     return [year, month, day, hour]
-
-
 
 def tle2rv(tle_filename):
 
@@ -345,3 +351,8 @@ def plot_n_orbits(rs,
         plt.savefig(title+'.png', dpi=300)
     if return_ax:
         return ax
+
+if __name__ == "__main__":
+    r0 = np.array([-2384.46,5729.01,3050.46])
+    v0 = np.array([-7.36138,-2.98997,1.64354])
+    state0=np.array(rv2coes(r0,v0,print_results=True)+[[0,0,0]])
