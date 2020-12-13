@@ -16,3 +16,10 @@ sun={
     'mu':1.989e30*G,
     'radius':695510
 }
+
+phobos={
+    'name':'Phobos',
+    'mass':1.072e16,
+    'mu':1.072e16*G,
+    'radius':11.267 
+}
